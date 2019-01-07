@@ -67,8 +67,8 @@ public class CameraMachine implements State {
     }
 
     @Override
-    public void start(SurfaceHolder holder, float screenProp) {
-        state.start(holder, screenProp);
+    public void start(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        state.start(holder, screenProp,takePictureWidth);
     }
 
     @Override
@@ -82,8 +82,8 @@ public class CameraMachine implements State {
     }
 
     @Override
-    public void swtich(SurfaceHolder holder, float screenProp) {
-        state.swtich(holder, screenProp);
+    public void swtich(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        state.swtich(holder, screenProp,takePictureWidth);
     }
 
     @Override
@@ -97,8 +97,8 @@ public class CameraMachine implements State {
     }
 
     @Override
-    public void record(Surface surface, float screenProp) {
-        state.record(surface, screenProp);
+    public void record(Surface surface, float screenProp, int takeVideoWidth) {
+        state.record(surface, screenProp,takeVideoWidth);
     }
 
     @Override
@@ -107,8 +107,8 @@ public class CameraMachine implements State {
     }
 
     @Override
-    public void cancle(SurfaceHolder holder, float screenProp) {
-        state.cancle(holder, screenProp);
+    public void cancle(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        state.cancle(holder, screenProp,takePictureWidth);
     }
 
     @Override

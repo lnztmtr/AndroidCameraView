@@ -10,7 +10,7 @@ import android.hardware.Camera;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.util.TypedValue;
@@ -33,6 +33,7 @@ import com.cjt2325.cameralibrary.util.FileUtil;
 import com.cjt2325.cameralibrary.util.LogUtil;
 import com.cjt2325.cameralibrary.util.ScreenUtils;
 import com.cjt2325.cameralibrary.view.CameraView;
+import com.github.chrisbanes.photoview.PhotoView;
 
 import java.io.IOException;
 
@@ -86,7 +87,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
 
     private Context mContext;
     private VideoView mVideoView;
-    private ImageView mPhoto;
+    private PhotoView mPhoto;
     private ImageView mSwitchCamera;
     private ImageView mFlashLamp;
     private CaptureLayout mCaptureLayout;
@@ -109,6 +110,8 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
     private int iconLeft = 0;       //左图标
     private int iconRight = 0;      //右图标
     private int duration = 0;       //录制时间
+    private int takePictureWidth = 1920;       //拍照图片尺寸，宽度
+    private int takeVideoWidth = 1920;       //拍视频尺寸，宽度
 
     //缩放梯度
     private int zoomGradient = 0;
@@ -137,6 +140,8 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         iconLeft = a.getResourceId(R.styleable.JCameraView_iconLeft, 0);
         iconRight = a.getResourceId(R.styleable.JCameraView_iconRight, 0);
         duration = a.getInteger(R.styleable.JCameraView_duration_max, 10 * 1000);       //没设置默认为10s
+        takePictureWidth = a.getInteger(R.styleable.JCameraView_takePictureWidth, 1920);       //没设置默认为1920
+        takeVideoWidth = a.getInteger(R.styleable.JCameraView_takeVideoWidth, 1920);       //没设置默认为1920
         a.recycle();
         initData();
         initView();
@@ -156,7 +161,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         setWillNotDraw(false);
         View view = LayoutInflater.from(mContext).inflate(R.layout.camera_view, this);
         mVideoView = (VideoView) view.findViewById(R.id.video_preview);
-        mPhoto = (ImageView) view.findViewById(R.id.image_photo);
+        mPhoto = (PhotoView) view.findViewById(R.id.image_photo);
         mSwitchCamera = (ImageView) view.findViewById(R.id.image_switch);
         mSwitchCamera.setImageResource(iconSrc);
         mFlashLamp = (ImageView) view.findViewById(R.id.image_flash);
@@ -186,7 +191,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         mSwitchCamera.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                machine.swtich(mVideoView.getHolder(), screenProp);
+                machine.swtich(mVideoView.getHolder(), screenProp,takePictureWidth);
             }
         });
         //拍照 录像
@@ -202,7 +207,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
             public void recordStart() {
                 mSwitchCamera.setVisibility(INVISIBLE);
                 mFlashLamp.setVisibility(INVISIBLE);
-                machine.record(mVideoView.getHolder().getSurface(), screenProp);
+                machine.record(mVideoView.getHolder().getSurface(), screenProp,takeVideoWidth);
             }
 
             @Override
@@ -240,7 +245,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         mCaptureLayout.setTypeLisenter(new TypeListener() {
             @Override
             public void cancel() {
-                machine.cancle(mVideoView.getHolder(), screenProp);
+                machine.cancle(mVideoView.getHolder(), screenProp,takePictureWidth);
             }
 
             @Override
@@ -288,16 +293,17 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
 
     @Override
     public void cameraHasOpened() {
-        CameraInterface.getInstance().doStartPreview(mVideoView.getHolder(), screenProp);
+        CameraInterface.getInstance().doStartPreview(mVideoView.getHolder(), screenProp,takePictureWidth);
     }
 
     //生命周期onResume
     public void onResume() {
         LogUtil.i("JCameraView onResume");
         resetState(TYPE_DEFAULT); //重置状态
-        CameraInterface.getInstance().registerSensorManager(mContext);
+        //个人不需要闪光灯和摄像头切换跟随手机位置旋转，因为不灵敏
+//        CameraInterface.getInstance().registerSensorManager(mContext);
         CameraInterface.getInstance().setSwitchView(mSwitchCamera, mFlashLamp);
-        machine.start(mVideoView.getHolder(), screenProp);
+        machine.start(mVideoView.getHolder(), screenProp,takePictureWidth);
     }
 
     //生命周期onPause
@@ -306,7 +312,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         stopVideo();
         resetState(TYPE_PICTURE);
         CameraInterface.getInstance().isPreview(false);
-        CameraInterface.getInstance().unregisterSensorManager(mContext);
+//        CameraInterface.getInstance().unregisterSensorManager(mContext);
     }
 
     //SurfaceView生命周期
@@ -329,6 +335,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
     public void surfaceDestroyed(SurfaceHolder holder) {
         LogUtil.i("JCameraView SurfaceDestroyed");
         CameraInterface.getInstance().doDestroyCamera();
+        CameraInterface.getInstance().destroyCameraInterface();
     }
 
 
@@ -437,7 +444,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
                 //初始化VideoView
                 FileUtil.deleteFile(videoUrl);
                 mVideoView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-                machine.start(mVideoView.getHolder(), screenProp);
+                machine.start(mVideoView.getHolder(), screenProp,takePictureWidth);
                 break;
             case TYPE_PICTURE:
                 mPhoto.setVisibility(INVISIBLE);
@@ -459,7 +466,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
             case TYPE_VIDEO:
                 stopVideo();    //停止播放
                 mVideoView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-                machine.start(mVideoView.getHolder(), screenProp);
+                machine.start(mVideoView.getHolder(), screenProp,takePictureWidth);
                 if (jCameraLisenter != null) {
                     jCameraLisenter.recordSuccess(videoUrl, firstFrame);
                 }

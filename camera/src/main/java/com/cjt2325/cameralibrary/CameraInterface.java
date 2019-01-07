@@ -328,7 +328,7 @@ public class CameraInterface implements Camera.PreviewCallback {
         }
     }
 
-    public synchronized void switchCamera(SurfaceHolder holder, float screenProp) {
+    public synchronized void switchCamera(SurfaceHolder holder, float screenProp, int takePictureWidth) {
         if (SELECTED_CAMERA == CAMERA_POST_POSITION) {
             SELECTED_CAMERA = CAMERA_FRONT_POSITION;
         } else {
@@ -346,13 +346,13 @@ public class CameraInterface implements Camera.PreviewCallback {
             }
         }
         LogUtil.i("open end");
-        doStartPreview(holder, screenProp);
+        doStartPreview(holder, screenProp,takePictureWidth);
     }
 
     /**
      * doStartPreview
      */
-    public void doStartPreview(SurfaceHolder holder, float screenProp) {
+    public void doStartPreview(SurfaceHolder holder, float screenProp ,int takePictureWidth) {
         if (isPreviewing) {
             LogUtil.i("doStartPreview isPreviewing");
         }
@@ -372,14 +372,15 @@ public class CameraInterface implements Camera.PreviewCallback {
                 Camera.Size previewSize = CameraParamUtil.getInstance().getPreviewSize(mParams
                         .getSupportedPreviewSizes(), targetWidth, screenProp);
 
+                Log.i(TAG, "Preview Picture :w = " + previewSize.width + " h = " + previewSize.height);
+
                 mParams.setPreviewSize(previewSize.width, previewSize.height);
 
                 preview_width = previewSize.width;
                 preview_height = previewSize.height;
 
-                // FIXME: 2019/1/6 目标尺寸改成配置方式
                 Camera.Size pictureSize = CameraParamUtil.getInstance().getPictureSize(mParams
-                        .getSupportedPictureSizes(), 1920, screenProp);
+                        .getSupportedPictureSizes(), takePictureWidth, screenProp);
                 mParams.setPictureSize(pictureSize.width, pictureSize.height);
 
                 if (CameraParamUtil.getInstance().isSupportedFocusMode(
@@ -495,7 +496,7 @@ public class CameraInterface implements Camera.PreviewCallback {
     }
 
     //启动录像
-    public void startRecord(Surface surface, float screenProp, ErrorCallback callback) {
+    public void startRecord(Surface surface, float screenProp,int takeVideoWidth, ErrorCallback callback) {
         mCamera.setPreviewCallback(null);
         final int nowAngle = (angle + 90) % 360;
         //获取第一帧图片
@@ -547,10 +548,10 @@ public class CameraInterface implements Camera.PreviewCallback {
 
         Camera.Size videoSize;
         if (mParams.getSupportedVideoSizes() == null) {
-            videoSize = CameraParamUtil.getInstance().getPreviewSize(mParams.getSupportedPreviewSizes(), 1920,
+            videoSize = CameraParamUtil.getInstance().getPreviewSize(mParams.getSupportedPreviewSizes(), takeVideoWidth,
                     screenProp);
         } else {
-            videoSize = CameraParamUtil.getInstance().getPreviewSize(mParams.getSupportedVideoSizes(), 1920,
+            videoSize = CameraParamUtil.getInstance().getPreviewSize(mParams.getSupportedVideoSizes(), takeVideoWidth,
                     screenProp);
         }
         Log.i(TAG, "setVideoSize    width = " + videoSize.width + "height = " + videoSize.height);

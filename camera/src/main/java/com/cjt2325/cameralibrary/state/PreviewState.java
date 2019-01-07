@@ -26,8 +26,8 @@ class PreviewState implements State {
     }
 
     @Override
-    public void start(SurfaceHolder holder, float screenProp) {
-        CameraInterface.getInstance().doStartPreview(holder, screenProp);
+    public void start(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        CameraInterface.getInstance().doStartPreview(holder, screenProp,takePictureWidth);
     }
 
     @Override
@@ -45,8 +45,8 @@ class PreviewState implements State {
     }
 
     @Override
-    public void swtich(SurfaceHolder holder, float screenProp) {
-        CameraInterface.getInstance().switchCamera(holder, screenProp);
+    public void swtich(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        CameraInterface.getInstance().switchCamera(holder, screenProp,takePictureWidth);
     }
 
     @Override
@@ -67,8 +67,8 @@ class PreviewState implements State {
     }
 
     @Override
-    public void record(Surface surface, float screenProp) {
-        CameraInterface.getInstance().startRecord(surface, screenProp, null);
+    public void record(Surface surface, float screenProp, int takeVideoWidth) {
+        CameraInterface.getInstance().startRecord(surface, screenProp, takeVideoWidth,null);
     }
 
     @Override
@@ -87,7 +87,7 @@ class PreviewState implements State {
     }
 
     @Override
-    public void cancle(SurfaceHolder holder, float screenProp) {
+    public void cancle(SurfaceHolder holder, float screenProp, int takePictureWidth) {
         LogUtil.i("浏览状态下,没有 cancle 事件");
     }
 

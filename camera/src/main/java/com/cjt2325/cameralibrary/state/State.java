@@ -15,23 +15,23 @@ import com.cjt2325.cameralibrary.CameraInterface;
  */
 public interface State {
 
-    void start(SurfaceHolder holder, float screenProp);
+    void start(SurfaceHolder holder, float screenProp, int takePictureWidth);
 
     void stop();
 
     void foucs(float x, float y, CameraInterface.FocusCallback callback);
 
-    void swtich(SurfaceHolder holder, float screenProp);
+    void swtich(SurfaceHolder holder, float screenProp, int takePictureWidth);
 
     void restart();
 
     void capture();
 
-    void record(Surface surface, float screenProp);
+    void record(Surface surface, float screenProp, int takeVideoWidth);
 
     void stopRecord(boolean isShort, long time);
 
-    void cancle(SurfaceHolder holder, float screenProp);
+    void cancle(SurfaceHolder holder, float screenProp, int takePictureWidth);
 
     void confirm();
 

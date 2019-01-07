@@ -24,8 +24,8 @@ public class BorrowVideoState implements State {
     }
 
     @Override
-    public void start(SurfaceHolder holder, float screenProp) {
-        CameraInterface.getInstance().doStartPreview(holder, screenProp);
+    public void start(SurfaceHolder holder, float screenProp, int takePictureWidth) {
+        CameraInterface.getInstance().doStartPreview(holder, screenProp,takePictureWidth);
         machine.setState(machine.getPreviewState());
     }
 
@@ -41,7 +41,7 @@ public class BorrowVideoState implements State {
 
 
     @Override
-    public void swtich(SurfaceHolder holder, float screenProp) {
+    public void swtich(SurfaceHolder holder, float screenProp, int takePictureWidth) {
 
     }
 
@@ -56,7 +56,7 @@ public class BorrowVideoState implements State {
     }
 
     @Override
-    public void record(Surface surface, float screenProp) {
+    public void record(Surface surface, float screenProp, int takeVideoWidth) {
 
     }
 
@@ -66,7 +66,7 @@ public class BorrowVideoState implements State {
     }
 
     @Override
-    public void cancle(SurfaceHolder holder, float screenProp) {
+    public void cancle(SurfaceHolder holder, float screenProp, int takePictureWidth) {
         machine.getView().resetState(JCameraView.TYPE_VIDEO);
         machine.setState(machine.getPreviewState());
     }
