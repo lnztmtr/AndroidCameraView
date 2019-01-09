@@ -15,5 +15,6 @@
         app:iconLeft="@drawable/ic_back"
         app:iconSize="30dp"
         app:iconSrc="@drawable/ic_camera"
+        app:takePictureWidth="4160"
         />
 </LinearLayout>

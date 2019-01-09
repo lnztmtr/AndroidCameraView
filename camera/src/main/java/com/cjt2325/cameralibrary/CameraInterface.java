@@ -207,7 +207,6 @@ public class CameraInterface implements Camera.PreviewCallback {
         }
     }
 
-
     public void setZoom(float zoom, int type) {
         if (mCamera == null) {
             return;
@@ -346,13 +345,13 @@ public class CameraInterface implements Camera.PreviewCallback {
             }
         }
         LogUtil.i("open end");
-        doStartPreview(holder, screenProp,takePictureWidth);
+        doStartPreview(holder, screenProp, takePictureWidth);
     }
 
     /**
      * doStartPreview
      */
-    public void doStartPreview(SurfaceHolder holder, float screenProp ,int takePictureWidth) {
+    public void doStartPreview(SurfaceHolder holder, float screenProp, int takePictureWidth) {
         if (isPreviewing) {
             LogUtil.i("doStartPreview isPreviewing");
         }
@@ -384,6 +383,10 @@ public class CameraInterface implements Camera.PreviewCallback {
                 mParams.setPictureSize(pictureSize.width, pictureSize.height);
 
                 if (CameraParamUtil.getInstance().isSupportedFocusMode(
+                        mParams.getSupportedFocusModes(),
+                        Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                    mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                } else if (CameraParamUtil.getInstance().isSupportedFocusMode(
                         mParams.getSupportedFocusModes(),
                         Camera.Parameters.FOCUS_MODE_AUTO)) {
                     mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
@@ -496,7 +499,7 @@ public class CameraInterface implements Camera.PreviewCallback {
     }
 
     //启动录像
-    public void startRecord(Surface surface, float screenProp,int takeVideoWidth, ErrorCallback callback) {
+    public void startRecord(Surface surface, float screenProp, int takeVideoWidth, ErrorCallback callback) {
         mCamera.setPreviewCallback(null);
         final int nowAngle = (angle + 90) % 360;
         //获取第一帧图片
@@ -687,7 +690,7 @@ public class CameraInterface implements Camera.PreviewCallback {
         mCamera.cancelAutoFocus();
         if (params.getMaxNumFocusAreas() > 0) {
             List<Camera.Area> focusAreas = new ArrayList<>();
-            focusAreas.add(new Camera.Area(focusRect, 800));
+            focusAreas.add(new Camera.Area(focusRect, 1000));
             params.setFocusAreas(focusAreas);
         } else {
             Log.i(TAG, "focus areas not supported");

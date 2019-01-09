@@ -59,12 +59,11 @@ public class CameraActivity extends AppCompatActivity {
         //JCameraView监听
         jCameraView.setJCameraLisenter(new JCameraListener() {
             @Override
-            public void captureSuccess(Bitmap bitmap) {
+            public void captureSuccess(String url,Bitmap bitmap) {
                 //获取图片bitmap
 //                Log.i("JCameraView", "bitmap = " + bitmap.getWidth());
-                String path = FileUtil.saveBitmap("JCamera", bitmap);
                 Intent intent = new Intent();
-                intent.putExtra("path", path);
+                intent.putExtra("path", url);
                 setResult(101, intent);
                 finish();
             }

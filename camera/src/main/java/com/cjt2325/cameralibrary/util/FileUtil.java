@@ -50,6 +50,25 @@ public class FileUtil {
             return "";
         }
     }
+    public static String saveBitmap(String dir, Bitmap b, String name) {
+        File file = new File(dir);
+        if (!file.exists()) {
+            file.mkdir();
+        }
+        String jpegName = dir + File.separator + name ;
+        try {
+            FileOutputStream fout = new FileOutputStream(jpegName);
+            BufferedOutputStream bos = new BufferedOutputStream(fout);
+            b.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+            bos.flush();
+            bos.close();
+            return jpegName;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
 
     public static boolean deleteFile(String url) {
         boolean result = false;
