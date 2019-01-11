@@ -32,6 +32,7 @@ import com.cjt2325.cameralibrary.listener.ErrorListener;
 import com.cjt2325.cameralibrary.listener.JCameraListener;
 import com.cjt2325.cameralibrary.listener.TypeListener;
 import com.cjt2325.cameralibrary.state.CameraMachine;
+import com.cjt2325.cameralibrary.util.DeviceUtils;
 import com.cjt2325.cameralibrary.util.FileUtil;
 import com.cjt2325.cameralibrary.util.LogUtil;
 import com.cjt2325.cameralibrary.util.ScreenUtils;
@@ -192,6 +193,9 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         mCaptureLayout.setLayoutParams(layoutParams);
         mFoucsView = (FoucsView) view.findViewById(R.id.fouce_view);
         mVideoView.getHolder().addCallback(this);
+        if (!DeviceUtils.hasHoneycomb()) {
+            mVideoView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        }
         //切换摄像头
         mSwitchCamera.setOnClickListener(new OnClickListener() {
             @Override
@@ -288,6 +292,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        //默认全屏
         float widthSize = mVideoView.getMeasuredWidth();
         float heightSize = mVideoView.getMeasuredHeight();
         if (screenProp == 0) {
@@ -306,7 +311,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         LogUtil.i("JCameraView onResume");
         resetState(TYPE_DEFAULT); //重置状态
         //个人不需要闪光灯和摄像头切换跟随手机位置旋转，因为不灵敏
-//        CameraInterface.getInstance().registerSensorManager(mContext);
+        CameraInterface.getInstance().registerSensorManager(mContext);
         CameraInterface.getInstance().setSwitchView(mSwitchCamera, mFlashLamp);
         machine.start(mVideoView.getHolder(), screenProp, takePictureWidth);
     }
@@ -317,7 +322,7 @@ public class JCameraView extends FrameLayout implements CameraInterface.CameraOp
         stopVideo();
         resetState(TYPE_PICTURE);
         CameraInterface.getInstance().isPreview(false);
-//        CameraInterface.getInstance().unregisterSensorManager(mContext);
+        CameraInterface.getInstance().unregisterSensorManager(mContext);
     }
 
     //SurfaceView生命周期

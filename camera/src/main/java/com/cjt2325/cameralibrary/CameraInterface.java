@@ -28,14 +28,17 @@ import com.cjt2325.cameralibrary.util.AngleUtil;
 import com.cjt2325.cameralibrary.util.CameraParamUtil;
 import com.cjt2325.cameralibrary.util.CheckPermission;
 import com.cjt2325.cameralibrary.util.DeviceUtil;
+import com.cjt2325.cameralibrary.util.DeviceUtils;
 import com.cjt2325.cameralibrary.util.FileUtil;
 import com.cjt2325.cameralibrary.util.LogUtil;
 import com.cjt2325.cameralibrary.util.ScreenUtils;
+import com.cjt2325.cameralibrary.util.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static android.graphics.Bitmap.createBitmap;
@@ -100,6 +103,15 @@ public class CameraInterface implements Camera.PreviewCallback {
     //视频质量
     private int mediaQuality = JCameraView.MEDIA_QUALITY_MIDDLE;
     private SensorManager sm = null;
+
+    /** 帧率 */
+    protected int mFrameRate = MIN_FRAME_RATE;
+
+    /** 最大帧率 */
+    public static final int MAX_FRAME_RATE = 25;
+    /** 最小帧率 */
+    public static final int MIN_FRAME_RATE = 15;
+
 
     //获取CameraInterface单例
     public static synchronized CameraInterface getInstance() {
@@ -365,6 +377,8 @@ public class CameraInterface implements Camera.PreviewCallback {
         if (mCamera != null) {
             try {
                 mParams = mCamera.getParameters();
+
+
                 int surfaceWidth = holder.getSurfaceFrame().width();
                 int surfaceHeight = holder.getSurfaceFrame().height();
                 int targetWidth = Math.max(surfaceWidth, surfaceHeight);
@@ -373,7 +387,11 @@ public class CameraInterface implements Camera.PreviewCallback {
 
                 Log.i(TAG, "Preview Picture :w = " + previewSize.width + " h = " + previewSize.height);
 
-                mParams.setPreviewSize(previewSize.width, previewSize.height);
+                if(DeviceUtils.isTaidian()) {
+                    mParams.setPreviewSize(1920, 1080);
+                }else{
+                    mParams.setPreviewSize(previewSize.width, previewSize.height);
+                }
 
                 preview_width = previewSize.width;
                 preview_height = previewSize.height;
@@ -382,20 +400,51 @@ public class CameraInterface implements Camera.PreviewCallback {
                         .getSupportedPictureSizes(), takePictureWidth, screenProp);
                 mParams.setPictureSize(pictureSize.width, pictureSize.height);
 
-                if (CameraParamUtil.getInstance().isSupportedFocusMode(
-                        mParams.getSupportedFocusModes(),
-                        Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                    mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                } else if (CameraParamUtil.getInstance().isSupportedFocusMode(
-                        mParams.getSupportedFocusModes(),
-                        Camera.Parameters.FOCUS_MODE_AUTO)) {
-                    mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                //设置自动连续对焦
+                String mode = getAutoFocusMode(mParams);
+                if (StringUtils.isNotEmpty(mode)) {
+                    mParams.setFocusMode(mode);
                 }
                 if (CameraParamUtil.getInstance().isSupportedPictureFormats(mParams.getSupportedPictureFormats(),
                         ImageFormat.JPEG)) {
                     mParams.setPictureFormat(ImageFormat.JPEG);
                     mParams.setJpegQuality(100);
                 }
+
+                List<Integer> rates = mParams.getSupportedPreviewFrameRates();
+                if (rates != null) {
+                    if (rates.contains(MAX_FRAME_RATE)) {
+                        mFrameRate = MAX_FRAME_RATE;
+                    } else {
+                        Collections.sort(rates);
+                        for (int i = rates.size() - 1; i >= 0; i--) {
+                            if (rates.get(i) <= MAX_FRAME_RATE) {
+                                mFrameRate = rates.get(i);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                mParams.setPreviewFrameRate(mFrameRate);
+
+                //设置人像模式，用来拍摄人物相片，如证件照。数码相机会把光圈调到最大，做出浅景深的效果。而有些相机还会使用能够表现更强肤色效果的色调、对比度或柔化效果进行拍摄，以突出人像主体。
+                //		if (mCameraId == Camera.CameraInfo.CAMERA_FACING_FRONT && isSupported(mParameters.getSupportedSceneModes(), Camera.Parameters.SCENE_MODE_PORTRAIT))
+                //			mParameters.setSceneMode(Camera.Parameters.SCENE_MODE_PORTRAIT);
+
+                if (isSupported(mParams.getSupportedWhiteBalance(), "auto"))
+                    mParams.setWhiteBalance("auto");
+
+                //是否支持视频防抖
+                if ("true".equals(mParams.get("video-stabilization-supported")))
+                    mParams.set("video-stabilization", "true");
+
+                //		mParameters.set("recording-hint", "false");
+                if (!DeviceUtils.isDevice("GT-N7100", "GT-I9308", "GT-I9300")) {
+                    mParams.set("cam_mode", 1);
+                    mParams.set("cam-mode", 1);
+                }
+
                 mCamera.setParameters(mParams);
                 mParams = mCamera.getParameters();
                 mCamera.setPreviewDisplay(holder);  //SurfaceView
@@ -408,6 +457,27 @@ public class CameraInterface implements Camera.PreviewCallback {
                 e.printStackTrace();
             }
         }
+    }
+
+    /** 连续自动对焦 */
+    private String getAutoFocusMode(Camera.Parameters mParameters) {
+        if (mParameters != null) {
+            //持续对焦是指当场景发生变化时，相机会主动去调节焦距来达到被拍摄的物体始终是清晰的状态。
+            List<String> focusModes = mParameters.getSupportedFocusModes();
+            if ((Build.MODEL.startsWith("GT-I950") || Build.MODEL.endsWith("SCH-I959") || Build.MODEL.endsWith("MEIZU MX3")) && isSupported(focusModes, "continuous-picture")) {
+                return "continuous-picture";
+            } else if (isSupported(focusModes, "continuous-video")) {
+                return "continuous-video";
+            } else if (isSupported(focusModes, "auto")) {
+                return "auto";
+            }
+        }
+        return null;
+    }
+
+    /** 检测是否支持指定特性 */
+    private boolean isSupported(List<String> list, String key) {
+        return list != null && list.contains(key);
     }
 
     /**

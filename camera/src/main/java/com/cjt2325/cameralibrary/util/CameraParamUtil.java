@@ -54,6 +54,7 @@ public class CameraParamUtil {
         Camera.Size optimalSize = null;
         Collections.sort(list, sizeComparator);
         for (Camera.Size s : list) {
+            LogUtil.i("avaliable preview size w= "+s.width+" h= "+s.height);
             if ( equalRate(s, rate)) {
                 if (Math.abs(s.width - targetWidth) < minDiff) {
                     optimalSize = s;
